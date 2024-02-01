@@ -35,13 +35,37 @@ def obtain_auth_token(request):
         return Response({'error': 'Invalid Credentials'}, status=400)
 
 
-@swagger_auto_schema(method='get', responses={200: EventSerializer(many=True)})
+@swagger_auto_schema(method='get',
+                     responses={200: EventSerializer(many=True)},
+                     manual_parameters=[
+                         openapi.Parameter('location', openapi.IN_QUERY, description="Location",
+                                           type=openapi.TYPE_STRING),
+                         openapi.Parameter('venue', openapi.IN_QUERY, description="Venue", type=openapi.TYPE_STRING),
+                         openapi.Parameter('sort_by', openapi.IN_QUERY, description="Sort by", type=openapi.TYPE_STRING,
+                                           enum=['date', '-date', 'popularity', '-popularity', 'created', '-created']),
+                     ]
+                     )
 @swagger_auto_schema(method='post', request_body=EventSerializer)
 @api_view(['GET', 'POST'])
 # @permission_classes([IsAuthenticated])
 def events(request):
     if request.method == "GET":
+        location = request.query_params.get('location')
+        venue = request.query_params.get('venue')
         events = Event.objects.all()
+        if location:
+            events = events.filter(location__icontains=location)
+        if venue:
+            events = events.filter(venue__icontains=venue)
+
+        sort_by = request.query_params.get('sort_by')
+        if sort_by in ['date', '-date']:
+            events = events.order_by('start_time' if sort_by == 'date' else '-start_time')
+        elif sort_by in ['popularity', '-popularity']:
+            events = events.order_by('popularity' if sort_by == 'popularity' else '-popularity')
+        elif sort_by in ['created', '-created']:
+            events = events.order_by('creation_time' if sort_by == 'created' else '-creation_time')
+
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
 
@@ -54,8 +78,6 @@ def events(request):
             return Response(serializer.data, status=201)
         else:
             return Response(serializer.errors, status=400)
-    else:
-        return Response(status=405)
 
 
 @swagger_auto_schema(method='get', manual_parameters=[event_id_param], responses={200: EventSerializer(many=False)})
@@ -83,5 +105,7 @@ def event_detail(request, event_id):
     elif request.method == "DELETE":
         event.delete()
         return Response(status=204)
-    else:
-        return Response(status=405)
+
+@api_view(['GET'])
+def event_participants(request):
+    pass

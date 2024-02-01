@@ -16,18 +16,30 @@ class Event(models.Model):
     location = models.CharField(max_length=255)
     venue = models.CharField(max_length=255)
 
-    participants = models.ManyToManyField(User, related_name='participating_events', blank=True)
+    participants = models.ManyToManyField(User, related_name='participating_events', blank=True, null=True)
 
     start_time = models.DateTimeField(blank=False, null=False)
     end_time = models.DateTimeField(blank=False, null=False)
     creation_time = models.DateTimeField(auto_now_add=True)
     last_update = models.DateTimeField(auto_now=True)
+    popularity = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.end_time < self.start_time:
+            raise ValueError("End time cannot be before start time")
+        if self.id is None:
+            self.popularity = 0
+        else:
+            self.popularity = self.popularity_count
+            print(self.popularity)
+        super(Event, self).save(*args, **kwargs)
+
 
     def __str__(self):
         return self.name
 
     @property
-    def popularity(self):
+    def popularity_count(self):
         return self.participants.count()
 
     @property
@@ -37,4 +49,3 @@ class Event(models.Model):
     class Meta:
         db_table = "events"
         ordering = ['id']
-
