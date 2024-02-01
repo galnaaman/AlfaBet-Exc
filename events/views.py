@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from .models import Event
 from .serializers import EventSerializer
@@ -7,6 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
 
 event_id_param = openapi.Parameter('event_id', openapi.IN_QUERY, description="Event ID", type=openapi.TYPE_INTEGER)
 
@@ -106,6 +108,24 @@ def event_detail(request, event_id):
         event.delete()
         return Response(status=204)
 
-@api_view(['GET'])
-def event_participants(request):
-    pass
+
+@swagger_auto_schema(method='post',
+                     manual_parameters=[event_id_param],
+                     request_body=openapi.Schema(
+                         type=openapi.TYPE_OBJECT,
+                         properties={
+                             'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
+                         }))
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def subscribe_to_event(request, event_id):
+    print(request.body)
+    event = get_object_or_404(Event, id=event_id)
+    user = get_object_or_404(User, id=request.data.get('user_id'))
+    # Check if the user is already subscribed
+    if user in event.participants.all():
+        return Response({'message': 'You are already subscribed to this event.'}, status=400)
+    event.participants.add(user)
+    event.popularity = event.popularity_count
+    event.save()
+    return Response({'message': 'Successfully subscribed to the event.'})

@@ -31,7 +31,6 @@ class Event(models.Model):
             self.popularity = 0
         else:
             self.popularity = self.popularity_count
-            print(self.popularity)
         super(Event, self).save(*args, **kwargs)
 
 
