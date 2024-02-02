@@ -9,6 +9,7 @@ from drf_yasg import openapi
 from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 event_id_param = openapi.Parameter('event_id', openapi.IN_QUERY, description="Event ID", type=openapi.TYPE_INTEGER)
 
@@ -68,7 +69,16 @@ def events(request):
         elif sort_by in ['created', '-created']:
             events = events.order_by('creation_time' if sort_by == 'created' else '-creation_time')
 
-        serializer = EventSerializer(events, many=True)
+        paginator_events = Paginator(events, 10)
+        page = request.GET.get('page')
+        try:
+            page_events = paginator_events.page(page)
+        except PageNotAnInteger:
+            page_events = paginator_events.page(1)
+        except EmptyPage:
+            page_events = paginator_events.page(1)
+
+        serializer = EventSerializer(page_events, many=True)
         return Response(serializer.data)
 
     elif request.method == "POST":
