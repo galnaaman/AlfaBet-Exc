@@ -40,8 +40,11 @@ INSTALLED_APPS = [
     'rest_framework',
     "drf_yasg",
     "django_extensions",
+    "django_apscheduler",
     "rest_framework.authtoken",
 ]
+
+APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -73,6 +76,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'AlfaBet.wsgi.application'
+
+# RabbitMQ Configuration
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
+RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
+RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME', 'guest')
+RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
+
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -107,7 +117,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Tel_Aviv'
 
 USE_I18N = True
 
