@@ -80,7 +80,35 @@ This architecture was chosen to leverage Django's strengths—a powerful ORM for
 
 **Security:** JWT authentication safeguards API endpoints, ensuring that only authorized users can trigger changes and receive notifications.
 
+# Quickstart
 
+Follow these steps to set up and run the application using Docker:
+
+## Configure Environment Variables
+
+1. Inspect the `settings.py` file in each service to identify required environment variables.
+2. Create a `.env` file for each service, supplying the necessary variables. It's crucial to ensure that these variables are correctly set before proceeding.
+
+## Build with Docker
+
+Execute the following command within each service's directory to create Docker images:
+
+```bash
+docker build -t service-name .
+```
+
+## Run Containers
+
+Start each service with the following command:
+
+```bash
+docker run --env-file .env -p port:port service-name
+```
+
+## Admin and API Access
+
+- Use the Django admin panel at `http://localhost:8000/admin` for application management.
+- Swagger documentation is available at `http://localhost:8000/swagger` for API exploration.
 
 # API Documentation
 
