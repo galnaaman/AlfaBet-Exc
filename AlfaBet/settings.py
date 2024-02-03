@@ -4,7 +4,7 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-#sov$!fhw4dq)lvi)-mz_sep^r9s8wubg&3m1+@!6eshr9hi!p')
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = os.environ.get('DEBUG', True)
 
@@ -79,7 +79,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/0",
+        "LOCATION": os.environ.get('REDIS_LOCATION'),
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
@@ -90,7 +90,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": ["redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/1"],
+            "hosts": [os.environ.get('REDIS_LOCATION-1')],
 
         },
     },
@@ -143,8 +143,8 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
 
-    'ALGORITHM': 'HS256',  # need to be env
-    'SIGNING_KEY': 'd807c1f906791dfbf5876a290f2f38292de279ccc2b5bdf41f4679095f3f15d8',  # Use your secret key here
+    'ALGORITHM': os.environ.get("JWT_ALGORITHM"),
+    'SIGNING_KEY': os.environ.get("JWT_SIGNING_KEY"),
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
