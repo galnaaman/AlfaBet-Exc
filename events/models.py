@@ -16,7 +16,7 @@ class Event(models.Model):
     location = models.CharField(max_length=255)
     venue = models.CharField(max_length=255)
 
-    participants = models.ManyToManyField(User, related_name='participating_events', blank=True, null=True)
+    participants = models.ManyToManyField(User, related_name='participating_events', blank=True)
 
     start_time = models.DateTimeField(blank=False, null=False)
     end_time = models.DateTimeField(blank=False, null=False)

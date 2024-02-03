@@ -21,14 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#sov$!fhw4dq)lvi)-mz_sep^r9s8wubg&3m1+@!6eshr9hi!p'
+SECRET_KEY = os.environ.get("SECRET_KEY",'django-insecure-#sov$!fhw4dq)lvi)-mz_sep^r9s8wubg&3m1+@!6eshr9hi!p')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get('DEBUG', True)
 
-# Application definition
+ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOSTS', "*")]
+
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -91,10 +91,15 @@ RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'events_db'),
+        'USER': os.environ.get('POSTGRES_USER', 'alfabet'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'alfabet456789!'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT', 5432),
     }
 }
+
 
 CACHES = {
     "default": {
