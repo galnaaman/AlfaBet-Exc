@@ -22,13 +22,11 @@ INSTALLED_APPS = [
     'rest_framework',
     "drf_yasg",
     "django_extensions",
-    "django_apscheduler",
     "easyaudit",
     "channels",
     'rest_framework_simplejwt.token_blacklist',
 ]
 
-APSCHEDULER_DATETIME_FORMAT = "N j, Y, f:s a"
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -62,11 +60,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AlfaBet.wsgi.application'
 
-# -------------------- RabbitMQ Configuration -----------------
-RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
-RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
-RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME', 'guest')
-RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'guest')
 
 # ------------------- Database Configuration -------------------
 
@@ -86,7 +79,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/0",  # need to be env
+        "LOCATION": "redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }

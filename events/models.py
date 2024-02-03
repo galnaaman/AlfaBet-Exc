@@ -11,8 +11,6 @@ class Event(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, blank=False, null=False)
     description = models.TextField(blank=True, null=True)
-
-    # Location and venue can be usesd as geo fields need to change it later
     location = models.CharField(max_length=255)
     venue = models.CharField(max_length=255)
 
@@ -32,7 +30,6 @@ class Event(models.Model):
         else:
             self.popularity = self.popularity_count
         super(Event, self).save(*args, **kwargs)
-
 
     def __str__(self):
         return self.name
