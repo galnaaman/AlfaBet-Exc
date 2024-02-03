@@ -7,7 +7,6 @@ class EventConsumer(AsyncWebsocketConsumer):
         self.event_id = self.scope['url_route']['kwargs']['event_id']
         self.room_group_name = f"event_{self.event_id}"
 
-        # Join room group
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name

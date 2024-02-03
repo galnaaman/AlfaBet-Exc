@@ -35,7 +35,7 @@ event_id_param = openapi.Parameter('event_id', openapi.IN_QUERY, description="Ev
                      )
 @swagger_auto_schema(method='post', request_body=EventSerializer)
 @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 @cache_page(60 * 1)
 @ratelimit(key='ip', rate='60/m', block=True)
 def events(request):
@@ -85,7 +85,7 @@ def events(request):
 @swagger_auto_schema(method='delete', request_body=openapi.Schema(type=openapi.TYPE_ARRAY,
                                                                   items=openapi.Items(type=openapi.TYPE_INTEGER)))
 @api_view(["POST", "PUT", "DELETE"])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def batch_events(request):
     if request.method == "POST":
         data = request.data
@@ -96,7 +96,6 @@ def batch_events(request):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "PUT":
-        # Test this route , response should be more intuitive
         data = request.data
         for event_data in data:
             event = get_object_or_404(Event, id=event_data.get('id'))
@@ -107,7 +106,6 @@ def batch_events(request):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response({"message": "Events updated successfully"}, status=status.HTTP_200_OK)
     elif request.method == "DELETE":
-        # if fail to delete any event, it should return a message with what events already deleted
         data = request.data
         for event_id in data:
             event = get_object_or_404(Event, id=event_id)
@@ -116,12 +114,12 @@ def batch_events(request):
             except Exception as e:
                 pass
         return Response({"message": "Events deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-#             await notify_event_update(event_id, {"text": "Event has been updated"})
+
 
 @swagger_auto_schema(method='get', manual_parameters=[event_id_param], responses={200: EventSerializer(many=False)})
 @swagger_auto_schema(method='put', request_body=EventSerializer)
 @swagger_auto_schema(method='delete', manual_parameters=[event_id_param])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 @ratelimit(key='ip', rate='60/m', block=True)
 @api_view(['GET', 'PUT', 'DELETE'])
 def event_detail(request, event_id):
@@ -153,7 +151,7 @@ def event_detail(request, event_id):
                              'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
                          }))
 @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def subscribe_to_event(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     user = get_object_or_404(User, id=request.data.get('user_id'))

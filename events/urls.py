@@ -8,7 +8,6 @@ urlpatterns = [
     path("events/batch/", batch_events, name="batch-events"),
     path("events/<int:event_id>", event_detail, name="event-detail"),
     path("events/<int:event_id>/subscribe/", subscribe_to_event, name="subscribe_to_event"),
-    # path('token/', obtain_auth_token, name='api-token'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),

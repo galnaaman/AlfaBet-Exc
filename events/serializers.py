@@ -8,9 +8,7 @@ class EventSerializer(serializers.ModelSerializer):
     Event Serializer
     """
     creator = serializers.SlugRelatedField(slug_field='id', queryset=User.objects.all())
-    # participants = serializers.SlugRelatedField(slug_field='id', queryset=User.objects.all(), many=True)
     is_past = serializers.ReadOnlyField()
-    # count of all the prticipants
     popularity = serializers.ReadOnlyField(source='popularity_count')
     participants = serializers.SlugRelatedField(slug_field='id', many=True,read_only=True)
 
