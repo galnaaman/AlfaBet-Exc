@@ -4,14 +4,14 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get("SECRET_KEY",'django-insecure-#sov$!fhw4dq)lvi)-mz_sep^r9s8wubg&3m1+@!6eshr9hi!p')
+SECRET_KEY = os.environ.get("SECRET_KEY", 'django-insecure-#sov$!fhw4dq)lvi)-mz_sep^r9s8wubg&3m1+@!6eshr9hi!p')
 
 DEBUG = os.environ.get('DEBUG', True)
 
 ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOSTS', "*")]
 
-
 INSTALLED_APPS = [
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_apscheduler",
     "easyaudit",
+    "channels",
     'rest_framework_simplejwt.token_blacklist',
 ]
 
@@ -61,7 +62,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AlfaBet.wsgi.application'
 
-# RabbitMQ Configuration
+# -------------------- RabbitMQ Configuration -----------------
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'localhost')
 RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', 5672)
 RABBITMQ_USERNAME = os.environ.get('RABBITMQ_USERNAME', 'guest')
@@ -92,6 +93,17 @@ CACHES = {
     }
 }
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": "redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/1",  # Point to your Redis server
+        },
+    },
+}
+
+ASGI_APPLICATION = 'your_project.routing.application'
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -108,8 +120,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'Asia/Tel_Aviv'
@@ -122,11 +132,15 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# ------------------- REST Framework Configuration -------------------
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
 }
+
+# ------------------- JWT Configuration -------------------
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=500),
@@ -134,8 +148,7 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
 
-
-    'ALGORITHM': 'HS256', # need to be env
+    'ALGORITHM': 'HS256',  # need to be env
     'SIGNING_KEY': 'd807c1f906791dfbf5876a290f2f38292de279ccc2b5bdf41f4679095f3f15d8',  # Use your secret key here
     'VERIFYING_KEY': None,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -143,6 +156,8 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
+
+# ------------------- Swagger Configuration -------------------
 
 SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
@@ -154,5 +169,5 @@ SWAGGER_SETTINGS = {
             "in": "header",
             "description": "JWT Token Remember to add 'Bearer ' before the token",
         }
- }
+    }
 }

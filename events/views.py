@@ -80,7 +80,8 @@ def events(request):
 
 @swagger_auto_schema(method='post', request_body=EventSerializer(many=True))
 @swagger_auto_schema(method='put', request_body=EventSerializer(many=True))
-@swagger_auto_schema(method='delete', request_body=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)))
+@swagger_auto_schema(method='delete', request_body=openapi.Schema(type=openapi.TYPE_ARRAY,
+                                                                  items=openapi.Items(type=openapi.TYPE_INTEGER)))
 @api_view(["POST", "PUT", "DELETE"])
 # @permission_classes([IsAuthenticated])
 def batch_events(request):
@@ -122,7 +123,6 @@ def batch_events(request):
 @ratelimit(key='ip', rate='60/m', block=True)
 @api_view(['GET', 'PUT', 'DELETE'])
 def event_detail(request, event_id):
-
     event = get_object_or_404(Event, id=event_id)
     if request.method == "GET":
         serializer = EventSerializer(event)
