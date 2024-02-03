@@ -12,6 +12,7 @@ class EventSerializer(serializers.ModelSerializer):
     is_past = serializers.ReadOnlyField()
     # count of all the prticipants
     popularity = serializers.ReadOnlyField(source='popularity_count')
+    participants = serializers.SlugRelatedField(slug_field='id', many=True,read_only=True)
 
     class Meta:
         model = Event
@@ -23,4 +24,5 @@ class EventSerializer(serializers.ModelSerializer):
         Create and return a new `Event` instance, given the validated data.
         """
         print(validated_data)
+        validated_data.pop('popularity_count', None)
         return Event.objects.create(**validated_data)

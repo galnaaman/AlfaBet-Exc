@@ -33,7 +33,7 @@ event_id_param = openapi.Parameter('event_id', openapi.IN_QUERY, description="Ev
                      )
 @swagger_auto_schema(method='post', request_body=EventSerializer)
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 @cache_page(60 * 1)
 @ratelimit(key='ip', rate='60/m', block=True)
 def events(request):
@@ -54,7 +54,7 @@ def events(request):
         elif sort_by in ['created', '-created']:
             events_list = events_list.order_by('creation_time' if sort_by == 'created' else '-creation_time')
 
-        paginator_events = Paginator(events_list, 1)
+        paginator_events = Paginator(events_list, 25)
         page = request.GET.get('page')
         try:
             page_events = paginator_events.page(page)
@@ -74,13 +74,15 @@ def events(request):
             serializer.save()
             return Response(serializer.data, status=201)
         else:
+            print(serializer.errors)
             return Response(serializer.errors, status=400)
 
 
 @swagger_auto_schema(method='post', request_body=EventSerializer(many=True))
 @swagger_auto_schema(method='put', request_body=EventSerializer(many=True))
-@swagger_auto_schema(method='delete', request_body=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.TYPE_INTEGER))
+@swagger_auto_schema(method='delete', request_body=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Items(type=openapi.TYPE_INTEGER)))
 @api_view(["POST", "PUT", "DELETE"])
+# @permission_classes([IsAuthenticated])
 def batch_events(request):
     if request.method == "POST":
         data = request.data
@@ -116,13 +118,12 @@ def batch_events(request):
 @swagger_auto_schema(method='get', manual_parameters=[event_id_param], responses={200: EventSerializer(many=False)})
 @swagger_auto_schema(method='put', request_body=EventSerializer)
 @swagger_auto_schema(method='delete', manual_parameters=[event_id_param])
+# @permission_classes([IsAuthenticated])
+@ratelimit(key='ip', rate='60/m', block=True)
 @api_view(['GET', 'PUT', 'DELETE'])
 def event_detail(request, event_id):
-    try:
-        event = Event.objects.get(id=event_id)
-    except Event.DoesNotExist:
-        return Response(status=404, data={"message": "Event not found"})
 
+    event = get_object_or_404(Event, id=event_id)
     if request.method == "GET":
         serializer = EventSerializer(event)
         return Response(serializer.data)
@@ -148,12 +149,10 @@ def event_detail(request, event_id):
                              'user_id': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
                          }))
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def subscribe_to_event(request, event_id):
-    print(request.body)
     event = get_object_or_404(Event, id=event_id)
     user = get_object_or_404(User, id=request.data.get('user_id'))
-    # Check if the user is already subscribed
     if user in event.participants.all():
         return Response({'message': 'You are already subscribed to this event.'}, status=400)
     event.participants.add(user)

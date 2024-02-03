@@ -1,0 +1,6 @@
+redis-config/
+Dockerfile
+.venv/
+.idea/
+.git
+.DS_Store

@@ -4,14 +4,16 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Event
 from django_apscheduler.jobstores import DjangoJobStore
-from  .utils import send_to_rabbitmq
+from .utils import send_to_rabbitmq
 import json
+
+
 def notify_worker():
     print("Notifying about events")
     now = timezone.localtime(timezone.now())
     threshold = now + timedelta(minutes=30)
     print(f"Threshold time: {threshold}")
-    events = Event.objects.filter(start_time__range=[threshold, threshold+timedelta(minutes=1)])
+    events = Event.objects.filter(start_time__range=[threshold, threshold + timedelta(minutes=1)])
     if not events:
         print("No events found")
 
@@ -35,7 +37,8 @@ def start():
     }
     scheduler = BackgroundScheduler(job_defaults=job_defaults, timezone=settings.TIME_ZONE)
     scheduler.add_jobstore(DjangoJobStore(), "default")
-    scheduler.add_job(notify_worker, 'interval', seconds=30,id="Notification_Worker",replace_existing=True,name="Notification_Worker",max_instances=1)
+    scheduler.add_job(notify_worker, 'interval', seconds=30, id="Notification_Worker", replace_existing=True,
+                      name="Notification_Worker", max_instances=1)
     scheduler.start()
     for job in scheduler.get_jobs():
         print(
