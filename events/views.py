@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from django.http import JsonResponse
+from rest_framework import status
 from rest_framework.authtoken.models import Token
 from .models import Event
 from .serializers import EventSerializer
@@ -10,32 +12,11 @@ from django.contrib.auth import authenticate
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django_ratelimit.decorators import ratelimit
+from django_ratelimit.core import get_usage, is_ratelimited
+from django.views.decorators.cache import cache_page
 
 event_id_param = openapi.Parameter('event_id', openapi.IN_QUERY, description="Event ID", type=openapi.TYPE_INTEGER)
-
-
-@swagger_auto_schema(method='post', request_body=openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
-        'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password'),
-    }
-), responses={200: openapi.Schema(
-    type=openapi.TYPE_OBJECT,
-    properties={
-        'token': openapi.Schema(type=openapi.TYPE_STRING, description='Token'),
-    }
-)})
-@api_view(['POST'])
-def obtain_auth_token(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    user = authenticate(username=username, password=password)
-    if user:
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({'token': token.key})
-    else:
-        return Response({'error': 'Invalid Credentials'}, status=400)
 
 
 @swagger_auto_schema(method='get',
@@ -46,30 +27,34 @@ def obtain_auth_token(request):
                          openapi.Parameter('venue', openapi.IN_QUERY, description="Venue", type=openapi.TYPE_STRING),
                          openapi.Parameter('sort_by', openapi.IN_QUERY, description="Sort by", type=openapi.TYPE_STRING,
                                            enum=['date', '-date', 'popularity', '-popularity', 'created', '-created']),
+                         openapi.Parameter('page', openapi.IN_QUERY, description="Page number",
+                                           type=openapi.TYPE_INTEGER)
                      ]
                      )
 @swagger_auto_schema(method='post', request_body=EventSerializer)
 @api_view(['GET', 'POST'])
-# @permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
+@cache_page(60 * 1)
+@ratelimit(key='ip', rate='60/m', block=True)
 def events(request):
     if request.method == "GET":
         location = request.query_params.get('location')
         venue = request.query_params.get('venue')
-        events = Event.objects.all()
+        events_list = Event.objects.all()
         if location:
-            events = events.filter(location__icontains=location)
+            events_list = events_list.filter(location__icontains=location)
         if venue:
-            events = events.filter(venue__icontains=venue)
+            events_list = events_list.filter(venue__icontains=venue)
 
         sort_by = request.query_params.get('sort_by')
         if sort_by in ['date', '-date']:
-            events = events.order_by('start_time' if sort_by == 'date' else '-start_time')
+            events_list = events_list.order_by('start_time' if sort_by == 'date' else '-start_time')
         elif sort_by in ['popularity', '-popularity']:
-            events = events.order_by('popularity' if sort_by == 'popularity' else '-popularity')
+            events_list = events_list.order_by('popularity' if sort_by == 'popularity' else '-popularity')
         elif sort_by in ['created', '-created']:
-            events = events.order_by('creation_time' if sort_by == 'created' else '-creation_time')
+            events_list = events_list.order_by('creation_time' if sort_by == 'created' else '-creation_time')
 
-        paginator_events = Paginator(events, 10)
+        paginator_events = Paginator(events_list, 1)
         page = request.GET.get('page')
         try:
             page_events = paginator_events.page(page)
@@ -90,6 +75,42 @@ def events(request):
             return Response(serializer.data, status=201)
         else:
             return Response(serializer.errors, status=400)
+
+
+@swagger_auto_schema(method='post', request_body=EventSerializer(many=True))
+@swagger_auto_schema(method='put', request_body=EventSerializer(many=True))
+@swagger_auto_schema(method='delete', request_body=openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.TYPE_INTEGER))
+@api_view(["POST", "PUT", "DELETE"])
+def batch_events(request):
+    if request.method == "POST":
+        data = request.data
+        serializer = EventSerializer(data=data, many=True)
+        if serializer.is_valid():
+            Event.objects.bulk_create([Event(**data) for data in serializer.validated_data])
+            return Response({"message": "Events created successfully"}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == "PUT":
+        # Test this route , response should be more intuitive
+        data = request.data
+        for event_data in data:
+            event = get_object_or_404(Event, id=event_data.get('id'))
+            serializer = EventSerializer(event, data=event_data)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"message": "Events updated successfully"}, status=status.HTTP_200_OK)
+    elif request.method == "DELETE":
+        # if fail to delete any event, it should return a message with what events already deleted
+        data = request.data
+        for event_id in data:
+            event = get_object_or_404(Event, id=event_id)
+            try:
+                event.delete()
+            except Exception as e:
+                pass
+        return Response({"message": "Events deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
 @swagger_auto_schema(method='get', manual_parameters=[event_id_param], responses={200: EventSerializer(many=False)})
