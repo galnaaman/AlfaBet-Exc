@@ -15,6 +15,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django_ratelimit.decorators import ratelimit
 from django_ratelimit.core import get_usage, is_ratelimited
 from django.views.decorators.cache import cache_page
+from .utils import send_event_update
+
 
 event_id_param = openapi.Parameter('event_id', openapi.IN_QUERY, description="Event ID", type=openapi.TYPE_INTEGER)
 
@@ -114,7 +116,7 @@ def batch_events(request):
             except Exception as e:
                 pass
         return Response({"message": "Events deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
+#             await notify_event_update(event_id, {"text": "Event has been updated"})
 
 @swagger_auto_schema(method='get', manual_parameters=[event_id_param], responses={200: EventSerializer(many=False)})
 @swagger_auto_schema(method='put', request_body=EventSerializer)
@@ -126,6 +128,7 @@ def event_detail(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     if request.method == "GET":
         serializer = EventSerializer(event)
+        send_event_update(event_id, "Event has been updated")
         return Response(serializer.data)
 
     elif request.method == "PUT":
@@ -133,6 +136,7 @@ def event_detail(request, event_id):
         serializer = EventSerializer(event, data=data)
         if serializer.is_valid():
             serializer.save()
+            send_event_update(event_id, "Event has been updated")
             return Response(serializer.data, status=200)
         else:
             return Response(serializer.errors, status=400)
@@ -159,3 +163,4 @@ def subscribe_to_event(request, event_id):
     event.popularity = event.popularity_count
     event.save()
     return Response({'message': 'Successfully subscribed to the event.'})
+

@@ -11,7 +11,7 @@ DEBUG = os.environ.get('DEBUG', True)
 ALLOWED_HOSTS = [os.environ.get('ALLOWED_HOSTS', "*")]
 
 INSTALLED_APPS = [
-
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -97,7 +97,8 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": "redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/1",  # Point to your Redis server
+            "hosts": ["redis://alfabet-redis:alfabet456789!@127.0.0.1:6379/1"],
+
         },
     },
 }
@@ -129,6 +130,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
