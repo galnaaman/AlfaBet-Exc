@@ -105,6 +105,48 @@ Start each service with the following command:
 docker run --env-file .env -p port:port service-name
 ```
 
+## Local Development without Docker
+
+### Install
+
+```bash
+python3 -m venv env && source env/bin/activate                # activate venv
+cp .env.dist .env                                             # create .env file and fill-in DB info
+pip install -r requirements.txt                               # install py requirements
+./manage.py migrate                                           # run migrations
+./manage.py collectstatic --noinput                           # collect static files
+redis-server                                                  # run redis locally for celery
+celery -A src.config worker --beat --loglevel=debug
+  --pidfile="./celerybeat.pid"
+  --scheduler django_celery_beat.schedulers:DatabaseScheduler # run celery beat and worker
+```
+
+### Run dev server
+
+This will run server on [http://localhost:8000](http://localhost:8000)
+
+```bash
+./manage.py runserver
+```
+
+### Create superuser
+
+If you want, you can create initial super-user with next commad:
+
+```bash
+./manage.py createsuperuser
+```
+
+### Running Tests
+
+To run all tests with code-coverate report, simple run:
+
+```bash
+./manage.py test
+```
+
+
+
 ## Admin and API Access
 
 - Use the Django admin panel at `http://localhost:8000/admin` for application management.
