@@ -111,14 +111,11 @@ docker run --env-file .env -p port:port service-name
 
 ```bash
 python3 -m venv env && source env/bin/activate                # activate venv
-cp .env.dist .env                                             # create .env file and fill-in DB info
 pip install -r requirements.txt                               # install py requirements
 ./manage.py migrate                                           # run migrations
 ./manage.py collectstatic --noinput                           # collect static files
-redis-server                                                  # run redis locally for celery
-celery -A src.config worker --beat --loglevel=debug
-  --pidfile="./celerybeat.pid"
-  --scheduler django_celery_beat.schedulers:DatabaseScheduler # run celery beat and worker
+
+
 ```
 
 ### Run dev server
@@ -126,7 +123,7 @@ celery -A src.config worker --beat --loglevel=debug
 This will run server on [http://localhost:8000](http://localhost:8000)
 
 ```bash
-./manage.py runserver
+daphne -p 8000 AlfaBet.asgi:application"
 ```
 
 ### Create superuser
